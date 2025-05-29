@@ -1,0 +1,25 @@
+[package]
+name = "elkr2-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = "0.13.5"
+tonic = "0.13.1"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+cpal = { version = "0.15.3", features = ["jack"] }
+anyhow = "1.0.98"
+lockfree = "0.5.1"
+opus = "0.3.0"
+webm = "2.0.0"
+
+[build-dependencies]
+tonic-build = "*"
+
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
+[lib]
+name = "engine"
+path = "src/lib.rs"
