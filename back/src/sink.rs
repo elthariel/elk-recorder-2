@@ -1,10 +1,10 @@
 use std::{
     borrow::Cow,
     fs,
+    io::Write,
     path::{Path, PathBuf},
     sync::mpsc,
     thread, time,
-    io::Write,
 };
 
 use anyhow::{anyhow, Result};
@@ -15,9 +15,11 @@ use crate::config;
 
 pub type SinkSender = mpsc::Sender<Vec<u8>>;
 type SinkReceiver = mpsc::Receiver<Vec<u8>>;
+pub type SinkExitSender = oneshot::Sender<()>;
+type SinkExitReceiver = oneshot::Receiver<()>;
 
 pub struct Sink {
-    exit: oneshot::Receiver<()>,
+    exit: SinkExitReceiver,
     receiver: SinkReceiver,
     path: PathBuf,
     packets_count: u64,
@@ -27,8 +29,10 @@ pub struct Sink {
 }
 
 impl Sink {
-    pub fn new(exit: oneshot::Receiver<()>, path: &Path) -> Result<(Sink, SinkSender)> {
+    pub fn new(path: &Path) -> Result<(Sink, SinkSender, SinkExitSender)> {
         let (sender, receiver) = mpsc::channel::<Vec<u8>>();
+        let (exit_sender, exit_receiver) = oneshot::channel::<()>();
+
         let fd = fs::File::create(path)?;
         // XXX: Use this one to avoid overwriting
         // let fd = fs::File::create_new(path)?;
@@ -36,14 +40,14 @@ impl Sink {
         let sink = Sink {
             path: path.to_path_buf(),
             receiver,
-            exit,
+            exit: exit_receiver,
             fd: Some(fd),
             segment: None,
             track_id: None,
             packets_count: 0,
         };
 
-        Ok((sink, sender))
+        Ok((sink, sender, exit_sender))
     }
 
     pub fn path_str(&self) -> Cow<'_, str> {
@@ -88,11 +92,8 @@ impl Sink {
             mux::Writer::new(self.fd.take().unwrap())
         };
 
-        println!("new builder");
         let builder = mux::SegmentBuilder::new(writer)?;
-        println!("set app");
         let builder = builder.set_writing_app("elk_recorder")?;
-        println!("add track");
         let (builder, track_id) = builder.add_audio_track(
             config::SAMPLE_RATE,
             config::CHANNELS as u32,
@@ -121,7 +122,7 @@ impl Sink {
             }
 
             let result = self.receiver.recv_timeout(timeout);
-            println!("Received data in sink");
+            // println!("Received data in sink");
             match result {
                 Ok(data) => {
                     if let Err(e) = self.handle_data(data) {
@@ -139,7 +140,8 @@ impl Sink {
     fn handle_data(&mut self, data: Vec<u8>) -> Result<()> {
         if let Some(mut segment) = self.segment.take() {
             let timestamp = (self.packets_count as u64) * config::FRAME_TIME_MS * 1_000_000_u64;
-            let result = segment.add_frame(self.track_id.unwrap(), data.as_slice(), timestamp, true);
+            let result =
+                segment.add_frame(self.track_id.unwrap(), data.as_slice(), timestamp, true);
             self.packets_count += 1;
             self.segment = Some(segment);
 

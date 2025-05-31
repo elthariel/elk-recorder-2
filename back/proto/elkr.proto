@@ -2,16 +2,38 @@ syntax = "proto3";
 package elkr;
 
 service ElkrService {
-    // Our SayHello rpc accepts HelloRequests and returns HelloReplies
-    rpc SayHello (HelloRequest) returns (HelloReply);
+    rpc AddSink(AddSinkRequest) returns (AddSinkResponse);
+    rpc RemoveSink(RemoveSinkRequest) returns (RemoveSinkResponse);
+    rpc ListSinks(ListSinksRequest) returns (ListSinksResponse);
 }
 
-message HelloRequest {
-    // Request message contains the name to be greeted
-    string name = 1;
-}
+enum Code {
+    CODE_NULL = 0;
+    OK = 200;
+    CLIENT_ERROR = 400;
+    SERVER_ERROR = 500;
+};
 
-message HelloReply {
-    // Reply contains the greeting message
-    string message = 1;
-}
+message AddSinkRequest {
+    string path = 1;
+};
+
+message AddSinkResponse {
+    Code code = 1;
+};
+
+message RemoveSinkRequest {
+    string path = 1;
+};
+
+message RemoveSinkResponse {
+    Code code = 1;
+};
+
+message ListSinksRequest {
+};
+
+message ListSinksResponse {
+    Code code = 1;
+    repeated string sinks = 23;
+};

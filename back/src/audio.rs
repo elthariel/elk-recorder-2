@@ -38,12 +38,6 @@ fn get_input_device_config(
 
     for config in supported_configs_range {
         if config.channels() == config::CHANNELS && config.sample_format() == fmt {
-            println!(
-                "Channels: {:?}, SampleFormat: {:?}",
-                config.channels(),
-                config.sample_format()
-            );
-
             return Ok(config.with_sample_rate(rate));
         }
     }
@@ -61,6 +55,12 @@ impl Audio {
 
         let config = get_input_device_config(&device, SampleRate(sample_rate), SampleFormat::F32)
             .expect("Unable to find suitable supported audio config");
+        println!(
+            "Audio configuration: channels: {}, sample rate: {}, format: {}",
+            config.channels(),
+            config.sample_rate().0,
+            config.sample_format()
+        );
 
         let (audio_out, audio_in) = lockfree::channel::spsc::create::<Vec<f32>>();
 

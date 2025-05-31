@@ -3,8 +3,6 @@ use std::{collections::HashMap, path::PathBuf, sync::mpsc, thread, time, vec::Ve
 use anyhow::{anyhow, Result};
 use lockfree;
 use opus;
-// use webm::mux;
-// use wavpack::{self, WavpackWrite};
 
 use crate::{audio::AudioReceiver, config, sink::SinkSender};
 
@@ -14,7 +12,7 @@ pub enum Command {
     Remove(PathBuf),
 }
 
-type CommandSender = mpsc::Sender<Command>;
+pub type CommandSender = mpsc::Sender<Command>;
 type CommandReceiver = mpsc::Receiver<Command>;
 
 pub struct Encoder {
@@ -37,24 +35,24 @@ impl Command {
 }
 
 impl Encoder {
-    pub fn new(
-        cmd: CommandReceiver,
-        audio_in: lockfree::channel::spsc::Receiver<Vec<f32>>,
-    ) -> Encoder {
-        println!("Creating Opus encoder (frame = {})", config::FRAME_SAMPLES);
+    pub fn new(audio_in: lockfree::channel::spsc::Receiver<Vec<f32>>) -> (Encoder, CommandSender) {
+        let (cmd_tx, cmd_rx) = Command::channel();
 
-        let mut encoder =
+        println!("Creating Opus encoder (frame = {})", config::FRAME_SAMPLES);
+        let mut opus_encoder =
             opus::Encoder::new(48000_u32, opus::Channels::Stereo, opus::Application::Audio)
                 .expect("Unable to create encoder Opus");
-        encoder.set_bitrate(opus::Bitrate::Max);
+        opus_encoder.set_bitrate(opus::Bitrate::Max);
 
-        return Encoder {
-            cmd,
+        let encoder = Encoder {
+            cmd: cmd_rx,
             audio_in,
-            encoder,
+            encoder: opus_encoder,
             input_buffer: Vec::<f32>::with_capacity(config::FRAME_SAMPLES),
             sinks: HashMap::new(),
         };
+
+        (encoder, cmd_tx)
     }
 
     pub fn start(self) {
@@ -118,7 +116,7 @@ impl Encoder {
     }
 
     fn handle_audio(&mut self, data: Vec<f32>) -> Result<()> {
-        println!("Received data from lockfree channel. {}", data.len());
+        // println!("Received data from lockfree channel. {}", data.len());
 
         self.input_buffer.extend_from_slice(data.as_slice());
 
@@ -130,7 +128,7 @@ impl Encoder {
 
             match result {
                 Ok(encoded) => {
-                    println!("Encoded frame ({} bytes)", encoded.len());
+                    // println!("Encoded frame ({} bytes)", encoded.len());
                     let _ = self.handle_packet(encoded)?;
                 }
                 Err(err) => {
@@ -145,7 +143,7 @@ impl Encoder {
     // A chunk of audio was encoded into a packet, let's push it to the sinks
     fn handle_packet(&mut self, packet: Vec<u8>) -> Result<()> {
         for (_path, sink) in self.sinks.iter() {
-            println!("Sending packet !");
+            // println!("Sending packet !");
             sink.send(packet.clone())?;
         }
 

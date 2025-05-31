@@ -12,13 +12,18 @@ anyhow = "1.0.98"
 lockfree = "0.5.1"
 opus = "0.3.0"
 webm = "2.0.0"
+clap = { version = "4.5.39", features = ["derive", "env"] }
 
 [build-dependencies]
 tonic-build = "*"
 
 [[bin]]
-name = "server"
-path = "src/main.rs"
+name = "serve"
+path = "src/cmd_serve.rs"
+
+[[bin]]
+name = "list"
+path = "src/cmd_list.rs"
 
 [lib]
 name = "engine"
