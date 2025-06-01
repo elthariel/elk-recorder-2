@@ -28,3 +28,10 @@ path = "src/cmd_list.rs"
 [lib]
 name = "engine"
 path = "src/lib.rs"
+
+
+[workspace.metadata.cross.target.armv7-unknown-linux-gnueabihf]
+pre-build = [
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update && apt-get --assume-yes install libasound2-dev:$CROSS_DEB_ARCH libjack-dev:$CROSS_DEB_ARCH libopus-dev:$CROSS_DEB_ARCH protobuf-compiler"
+]

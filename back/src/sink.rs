@@ -89,6 +89,7 @@ impl Sink {
                 }
             }
         } else {
+            println!("Initializing writer for {}", self.path_str());
             mux::Writer::new(self.fd.take().unwrap())
         };
 
