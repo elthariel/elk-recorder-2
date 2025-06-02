@@ -142,7 +142,9 @@ impl Sink {
                 Err(mpsc::RecvTimeoutError::Disconnected) => {
                     return;
                 }
-                Err(_) => (),
+                Err(e) => {
+                    println!("Error for sink {} : {:?}", self.path_str(), e);
+                },
             }
         }
     }

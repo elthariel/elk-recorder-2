@@ -36,6 +36,19 @@ events when new USB drives are mounted and requests recording.
   ```
 - Plug an USB key and mount somewhere (your system might be doing so automatically)
 
+### Post processing
+
+Since the stuff is operated in a very brutal manner by pluging USB sticks in and
+out, it's likely that the last segment of the file will be corrupted. Also, we
+limit buffering and concatenate a lot of webm segments into a single file.
+
+I think this is supported by the spec, but a lot of players won't like it, so it's advised to post-process the file using `ffmpeg` or something similar.
+
+`ffmpeg -i /media/stick/elkr/elkr_0001.weba /tmp/elkr_0001.flac`
+
+You might receive a lot of complaints from the demuxer, but you *should*
+hopefully be fine
+
 ## Cross compile for raspi 2b
 
 The engine is cross compiled for the raspbi 2b using

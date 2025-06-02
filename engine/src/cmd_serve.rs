@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
     let (encoder, encoder_cmd_sender) = encoder::Encoder::new(audio_data_receiver);
     let svc = service::Controller::new(encoder_cmd_sender);
 
-    let _stream = audio_engine.start();
+    let _stream = audio_engine.start()?;
     encoder.start();
 
     println!("Starting control server, listening to '{}'", args.bind);

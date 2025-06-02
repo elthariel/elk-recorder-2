@@ -74,6 +74,8 @@ impl Audio {
     }
 
     pub fn start(mut self) -> Result<Stream> {
+        println!("Starting audio thread");
+
         let stream = self.device.build_input_stream(
             &self.config.config(),
             move |data: &[f32], _info: &cpal::InputCallbackInfo| {

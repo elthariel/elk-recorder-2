@@ -1,5 +1,8 @@
 [Unit]
 Description=ELK Recorder 2 Engine
+Requires=pipewire.service
+Requires=pipewire-pulse.service
+Requires=wireplumber.service
 
 [Service]
 ExecStart=%h/elkr2/engine/serve --audio-input pulse
