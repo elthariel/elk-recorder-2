@@ -24,7 +24,7 @@ fn get_input_device(host: Host, name: String) -> Result<Device> {
             }
         }
     }
-    return Err(anyhow!("Unable to list input devices"));
+    return Err(anyhow!("Unable to find input device: {}", name));
 }
 
 fn get_input_device_config(

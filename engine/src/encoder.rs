@@ -23,6 +23,7 @@ pub struct Encoder {
     // Opus can only encode fixed-length audio chunks, so we need a buffer to store data
     // that's not been encoded yet
     input_buffer: Vec<f32>,
+    packets_count: u64,
 
     // A list of sink thread we're pushing data to
     sinks: HashMap<PathBuf, SinkSender>,
@@ -42,13 +43,14 @@ impl Encoder {
         let mut opus_encoder =
             opus::Encoder::new(48000_u32, opus::Channels::Stereo, opus::Application::Audio)
                 .expect("Unable to create encoder Opus");
-        opus_encoder.set_bitrate(opus::Bitrate::Max);
+        let _ = opus_encoder.set_bitrate(opus::Bitrate::Max);
 
         let encoder = Encoder {
             cmd: cmd_rx,
             audio_in,
             encoder: opus_encoder,
             input_buffer: Vec::<f32>::with_capacity(config::FRAME_SAMPLES),
+            packets_count: 0,
             sinks: HashMap::new(),
         };
 
@@ -142,9 +144,15 @@ impl Encoder {
 
     // A chunk of audio was encoded into a packet, let's push it to the sinks
     fn handle_packet(&mut self, packet: Vec<u8>) -> Result<()> {
+        self.packets_count += 1;
+
         for (_path, sink) in self.sinks.iter() {
             // println!("Sending packet !");
             sink.send(packet.clone())?;
+        }
+
+        if self.packets_count % 1000 == 0 {
+            println!("Encoded {}k opus packets", self.packets_count / 1000);
         }
 
         Ok(())

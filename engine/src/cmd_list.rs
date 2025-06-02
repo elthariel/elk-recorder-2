@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use cpal::{
     traits::{DeviceTrait, HostTrait},
-    Device, Host, SampleFormat, SampleRate, Stream, SupportedStreamConfig,
+    Host,
 };
 
 fn list_devices(host: &Host) -> Result<Vec<String>> {

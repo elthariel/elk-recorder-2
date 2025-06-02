@@ -1,0 +1,14 @@
+[project]
+name = "elkr2-manager"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.2.1",
+    "dbus-python>=1.4.0",
+    "grpcio>=1.71.0",
+    "grpcio-tools>=1.71.0",
+    "pygobject<=3.48.2",
+    "pyhumps>=3.8.0",
+]

@@ -117,7 +117,7 @@ impl ElkrService for Controller {
 
         let response = proto::ListSinksResponse {
             code: proto::Code::Ok as i32,
-            sinks: result
+            sinks: result,
         };
 
         Ok(Response::new(response))

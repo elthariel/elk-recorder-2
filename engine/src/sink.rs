@@ -26,6 +26,7 @@ pub struct Sink {
     fd: Option<fs::File>,
     segment: Option<mux::Segment<fs::File>>,
     track_id: Option<mux::AudioTrack>,
+    segments_count: u64,
 }
 
 impl Sink {
@@ -45,6 +46,7 @@ impl Sink {
             segment: None,
             track_id: None,
             packets_count: 0,
+            segments_count: 0,
         };
 
         Ok((sink, sender, exit_sender))
@@ -117,13 +119,20 @@ impl Sink {
             }
 
             if self.packets_count % config::FRAMES_PER_SEGMENT == 0 {
+                self.segments_count += 1;
+
                 if let Err(e) = self.build_segment() {
                     println!("Unable to build segment: {:?}", e);
+                } else {
+                    println!(
+                        "Built segment {} for {}",
+                        self.segments_count,
+                        self.path_str()
+                    );
                 }
             }
 
             let result = self.receiver.recv_timeout(timeout);
-            // println!("Received data in sink");
             match result {
                 Ok(data) => {
                     if let Err(e) = self.handle_data(data) {

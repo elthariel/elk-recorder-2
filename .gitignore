@@ -3,3 +3,9 @@
 # Rust stuff
 target
 Cargo.lock
+
+# Python stuff
+__pycache__
+
+# Deployment
+dist/
